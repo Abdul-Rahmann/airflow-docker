@@ -11,11 +11,14 @@ defaulter_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-def greet(age, ti):
+def greet(ti):
     first_name = ti.xcom_pull(task_ids='get_name',key='first_name')
     last_name = ti.xcom_pull(task_ids='get_name',key='last_name')
+    age = ti.xcom_pull(task_ids='get_age',key='age')
     print(f"Hello! my name is {first_name} {last_name} and I am {age} years old.")
 
+def get_age(ti):
+    ti.xcom_push(key='age', value=25)
 
 def get_name(ti):
     ti.xcom_push(key='first_name', value='Samuel')
@@ -39,4 +42,9 @@ with DAG(
         python_callable=get_name,
     )
 
-    task2 >> task1
+    task3 = PythonOperator(
+        task_id='get_age',
+        python_callable=get_age,
+    )
+
+    [task2, task3] >> task1
